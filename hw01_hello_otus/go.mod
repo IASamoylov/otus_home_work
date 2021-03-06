@@ -1,3 +1,3 @@
-module github.com/IASamoylov/hw01_hello_otus
+module github.com/IASamoylov/otus_home_work
 
 go 1.16
