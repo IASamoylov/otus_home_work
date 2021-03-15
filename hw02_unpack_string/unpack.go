@@ -2,7 +2,6 @@ package hw02unpackstring
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,6 +16,8 @@ func Unpack(input string) (string, error) {
 	}
 
 	var sb strings.Builder
+
+	// Optimizes memory allocation
 	sb.Grow(capacity(input))
 
 	var prevChar string
@@ -28,14 +29,13 @@ func Unpack(input string) (string, error) {
 
 			continue
 		}
+
 		if nextIsNotDigit(i, v, input) {
 			sb.WriteRune(v)
 		}
 
 		prevChar = string(v)
 	}
-
-	fmt.Println(sb.Len(), sb.Cap())
 
 	return sb.String(), nil
 }
@@ -53,34 +53,31 @@ func nextIsNotDigit(i int, v rune, input string) bool {
 func capacity(input string) int {
 	newCapacity := 0
 	charCap := 0
-	var _ rune
 
 	for _, v := range input {
 		switch {
 		case unicode.IsDigit(v):
 			l, _ := strconv.Atoi(string(v))
 
-			newCapacity += charCap * l
+			newCapacity += charCap * (l - 1)
 			charCap = 0
 		default:
-			newCapacity += charCap
 			charCap = len(string(v))
+			newCapacity += charCap
 		}
-
-		_ = v
 	}
 
 	return newCapacity
 }
 
 func validate(input string) error {
+	//  The string cannot start with the digital symbol.
 	if len(input) != 0 && unicode.IsDigit([]rune(input)[0]) {
 		return ErrInvalidString
 	}
 
-	matched, _ := regexp.Match(`\d{2,}`, []byte(input))
-
-	if matched {
+	// The string cannot contain numbers.
+	if matched, _ := regexp.Match(`\d{2,}`, []byte(input)); matched {
 		return ErrInvalidString
 	}
 
