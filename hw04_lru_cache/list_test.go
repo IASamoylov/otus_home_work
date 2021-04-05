@@ -48,4 +48,74 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
 	})
+
+	t.Run("tests with head and tail", func(t *testing.T) {
+		t.Run("remove head", func(t *testing.T) {
+			l := NewList()
+
+			l.PushBack(10) // [10]
+			l.PushBack(20) // [10, 20]
+			l.PushBack(30) // [10, 20, 30]
+
+			l.Remove(l.Front())
+
+			elems := make([]int, 0, l.Len())
+			for i := l.Front(); i != nil; i = i.Next {
+				elems = append(elems, i.Value.(int))
+			}
+
+			require.Equal(t, []int{20, 30}, elems)
+		})
+
+		t.Run("remove tail", func(t *testing.T) {
+			l := NewList()
+
+			l.PushBack(10) // [10]
+			l.PushBack(20) // [10, 20]
+			l.PushBack(30) // [10, 20, 30]
+
+			l.Remove(l.Back())
+
+			elems := make([]int, 0, l.Len())
+			for i := l.Front(); i != nil; i = i.Next {
+				elems = append(elems, i.Value.(int))
+			}
+
+			require.Equal(t, []int{10, 20}, elems)
+		})
+
+		t.Run("move tail to front", func(t *testing.T) {
+			l := NewList()
+
+			l.PushBack(10) // [10]
+			l.PushBack(20) // [10, 20]
+			l.PushBack(30) // [10, 20, 30]
+
+			l.MoveToFront(l.Back())
+
+			elems := make([]int, 0, l.Len())
+			for i := l.Front(); i != nil; i = i.Next {
+				elems = append(elems, i.Value.(int))
+			}
+
+			require.Equal(t, []int{30, 10, 20}, elems)
+		})
+
+		t.Run("move head to front", func(t *testing.T) {
+			l := NewList()
+
+			l.PushBack(10) // [10]
+			l.PushBack(20) // [10, 20]
+			l.PushBack(30) // [10, 20, 30]
+
+			l.MoveToFront(l.Front())
+
+			elems := make([]int, 0, l.Len())
+			for i := l.Front(); i != nil; i = i.Next {
+				elems = append(elems, i.Value.(int))
+			}
+
+			require.Equal(t, []int{10, 20, 30}, elems)
+		})
+	})
 }
