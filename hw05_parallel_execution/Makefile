@@ -10,6 +10,7 @@ test:
 	go test -v -race -count=100 .
 
 .PHONY: clean
+clean:
 	go clean -cache -modcache -i -r
 
 .DEFAULT_GOAL := pre-commit

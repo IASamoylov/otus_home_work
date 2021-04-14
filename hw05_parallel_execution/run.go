@@ -11,6 +11,10 @@ type Task func() error
 
 // Run starts tasks in n goroutines and stops its work when receiving m errors from tasks.
 func Run(tasks []Task, n, m int) error {
+	if n == 0 {
+		panic("Workers count should be more than zero")
+	}
+
 	if len(tasks) == 0 {
 		return nil
 	}
@@ -31,6 +35,10 @@ func Run(tasks []Task, n, m int) error {
 	produce(tasks, tasksChannel)
 
 	for err := range errorChannel {
+		if err != nil && m == 0 {
+			panic("workers configured as error impossible")
+		}
+
 		if err != nil {
 			m--
 		}
