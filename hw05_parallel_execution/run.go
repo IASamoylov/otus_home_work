@@ -21,20 +21,28 @@ func Run(tasks []Task, n, m int) error {
 
 	countOfTasks := len(tasks)
 
-	tasksChannel := make(chan Task, len(tasks))
-	errorChannel := make(chan error, len(tasks))
-	shutdownChannel := make(chan interface{})
+	tasksCh := make(chan Task, len(tasks))
+	errorCh := make(chan error, len(tasks))
+	shutdown := make(chan struct{})
 
 	var wg sync.WaitGroup
+	wg.Add(n)
 
-	for i := n; i != 0; i-- {
-		wg.Add(1)
-		go startConsumer(&wg, shutdownChannel, tasksChannel, errorChannel)
+	for i := 0; i < n; i++ {
+		go func() {
+			defer wg.Done()
+			newConsumer(shutdown, tasksCh, errorCh)
+		}()
 	}
 
-	produce(tasks, tasksChannel)
+	produce(tasks, tasksCh)
 
-	for err := range errorChannel {
+	defer func() {
+		close(shutdown)
+		wg.Wait()
+	}()
+
+	for err := range errorCh {
 		if err != nil && m == 0 {
 			panic("workers configured as error impossible")
 		}
@@ -46,12 +54,10 @@ func Run(tasks []Task, n, m int) error {
 		countOfTasks--
 
 		if m == 0 {
-			forceClose(&wg, shutdownChannel, tasksChannel, errorChannel)
 			return ErrErrorsLimitExceeded
 		}
 
 		if countOfTasks == 0 {
-			forceClose(&wg, shutdownChannel, tasksChannel, errorChannel)
 			return nil
 		}
 	}
@@ -59,33 +65,27 @@ func Run(tasks []Task, n, m int) error {
 	return nil
 }
 
-func forceClose(wg *sync.WaitGroup, shutdownChannel chan interface{}, tasksQueue chan Task, errorChannel chan error) {
-	close(shutdownChannel)
-	close(tasksQueue)
-	wg.Wait()
-	close(errorChannel)
-}
+func produce(tasks []Task, tasksChannel chan<- Task) {
+	defer close(tasksChannel)
 
-func produce(tasks []Task, tasksChannel chan Task) {
 	for _, t := range tasks {
 		tasksChannel <- t
 	}
 }
 
-func startConsumer(wg *sync.WaitGroup, shutdownChannel chan interface{}, tasksQueue chan Task, errorChannel chan error) {
-	defer wg.Done()
-
+func newConsumer(shutdownChannel chan struct{}, tasks chan Task, errorCh chan error) {
 	for {
+		f, ok := <-tasks
+
 		select {
 		case <-shutdownChannel:
 			return
 		default:
 		}
 
-		f, ok := <-tasksQueue
 		if ok {
 			err := f()
-			errorChannel <- err
+			errorCh <- err
 		}
 	}
 }
