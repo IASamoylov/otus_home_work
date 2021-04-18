@@ -75,6 +75,12 @@ func produce(tasks []Task, tasksChannel chan<- Task) {
 
 func newConsumer(shutdownChannel chan struct{}, tasks chan Task, errorCh chan error) {
 	for {
+		select {
+		case <-shutdownChannel:
+			return
+		default:
+		}
+
 		f, ok := <-tasks
 
 		select {
