@@ -8,14 +8,47 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
 
 func TestRun(t *testing.T) {
-	defer goleak.VerifyNone(t)
+	t.Run("panic when max count errors is zero and one of some task return error", func(t *testing.T) {
+		tasksCount := 50
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			err := fmt.Errorf("error from task %d", i)
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				atomic.AddInt32(&runTasksCount, 1)
+				return err
+			})
+		}
+
+		workersCount := 10
+		maxErrorsCount := 0
+
+		assert.PanicsWithValue(t, "workers configured as error impossible", func() {
+			_ = Run(tasks, workersCount, maxErrorsCount)
+		})
+	})
+
+	t.Run("panic when workers count is zero", func(t *testing.T) {
+		tasksCount := 50
+		tasks := make([]Task, 0, tasksCount)
+
+		assert.PanicsWithValue(t, "Workers count should be more than zero", func() {
+			_ = Run(tasks, 0, 0)
+		})
+	})
 
 	t.Run("if were errors in first M tasks, than finished not more N+M tasks", func(t *testing.T) {
+		defer goleak.VerifyNone(t)
+
 		tasksCount := 50
 		tasks := make([]Task, 0, tasksCount)
 
@@ -39,6 +72,8 @@ func TestRun(t *testing.T) {
 	})
 
 	t.Run("tasks without errors", func(t *testing.T) {
+		defer goleak.VerifyNone(t)
+
 		tasksCount := 50
 		tasks := make([]Task, 0, tasksCount)
 
