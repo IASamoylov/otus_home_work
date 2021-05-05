@@ -22,7 +22,8 @@ func TestPipeline(t *testing.T) {
 				defer close(out)
 				for v := range in {
 					time.Sleep(sleepPerStage)
-					out <- f(v)
+					newVal := f(v)
+					out <- newVal
 				}
 			}()
 			return out
@@ -49,7 +50,9 @@ func TestPipeline(t *testing.T) {
 
 		result := make([]string, 0, 10)
 		start := time.Now()
-		for s := range ExecutePipeline(in, nil, stages...) {
+		out := ExecutePipeline(in, nil, stages...)
+
+		for s := range out {
 			result = append(result, s.(string))
 		}
 		elapsed := time.Since(start)
@@ -89,5 +92,9 @@ func TestPipeline(t *testing.T) {
 
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
+	})
+
+	t.Run("nil when stages are empty", func(t *testing.T) {
+		require.Nil(t, ExecutePipeline(nil, nil))
 	})
 }
