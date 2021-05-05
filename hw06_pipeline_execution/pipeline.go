@@ -22,20 +22,11 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		stagesWithDone = append(stagesWithDone, wrapStageWithDone(stage))
 	}
 
-	return combineStagesToChain(stagesWithDone)(in, done)
-}
-
-// solution with recursion, possible out of memory.
-func combineStagesToChain(stages []StageWithDone) StageWithDone {
-	stage := stages[0]
-
-	if len(stages) == 1 {
-		return stage
+	for _, stage := range stagesWithDone {
+		in = stage(in, done)
 	}
 
-	return func(in In, done In) Out {
-		return combineStagesToChain(stages[1:])(stage(in, done), done)
-	}
+	return in
 }
 
 func wrapStageWithDone(stage Stage) func(in In, done In) Out {
