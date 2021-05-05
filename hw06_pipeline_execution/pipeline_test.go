@@ -100,7 +100,6 @@ func TestPipeline(t *testing.T) {
 }
 
 func TestPipelineByAlekseyBakin(t *testing.T) {
-
 	t.Run("concurrency", func(t *testing.T) {
 		waitCh := make(chan struct{})
 		defer close(waitCh)
