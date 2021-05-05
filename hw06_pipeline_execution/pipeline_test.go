@@ -1,6 +1,7 @@
 package hw06pipelineexecution
 
 import (
+	"runtime/debug"
 	"strconv"
 	"testing"
 	"time"
@@ -97,58 +98,43 @@ func TestPipeline(t *testing.T) {
 	t.Run("nil when stages are empty", func(t *testing.T) {
 		require.Nil(t, ExecutePipeline(nil, nil))
 	})
-}
 
-func TestPipelineByAlekseyBakin(t *testing.T) {
-	t.Run("concurrency", func(t *testing.T) {
-		waitCh := make(chan struct{})
-		defer close(waitCh)
+	t.Run("solution not throw runtime error out of memory", func(t *testing.T) {
+		debug.SetMaxStack(1 << 13)
 
-		stageFn := func(in In) Out {
-			out := make(Bi)
-			go func() {
-				defer close(out)
-				for v := range in {
-					out <- v
-					<-waitCh
-				}
-			}()
-			return out
+		stages := []Stage{
+			g("Dummy", func(v interface{}) interface{} { return v }),
 		}
 
-		lastStageFn := func(in In) Out {
-			out := make(Bi)
-			go func() {
-				defer close(out)
-				for v := range in {
-					out <- v
-					<-waitCh
-				}
-			}()
-			return out
+		i := 0
+
+		for i != 50 {
+			stages = append(stages, g("Adder (+ 100)", func(v interface{}) interface{} { return v.(int) + 100 }))
+			i++
 		}
+
+		stages = append(stages, g("Stringifier", func(v interface{}) interface{} { return strconv.Itoa(v.(int)) }))
 
 		in := make(Bi)
-		const testValue = "test"
+		data := []int{1, 2, 3, 4, 5}
+
 		go func() {
-			in <- testValue
+			for _, v := range data {
+				in <- v
+			}
 			close(in)
 		}()
 
-		var resValue interface{}
-		out := ExecutePipeline(in, nil, stageFn, stageFn, lastStageFn)
-		require.Eventually(t, func() bool {
-			select {
-			case resValue = <-out:
-				return true
-			default:
-				return false
-			}
-		}, time.Second, time.Millisecond)
+		result := make([]string, 0, 10)
+		for s := range ExecutePipeline(in, nil, stages...) {
+			result = append(result, s.(string))
+		}
 
-		require.EqualValues(t, testValue, resValue)
+		require.Equal(t, []string{"5001", "5002", "5003", "5004", "5005"}, result)
 	})
+}
 
+func TestPipelineByAlekseyBakin(t *testing.T) {
 	t.Run("done", func(t *testing.T) {
 		waitCh := make(chan struct{})
 		defer close(waitCh)

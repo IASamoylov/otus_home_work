@@ -16,14 +16,8 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		return nil
 	}
 
-	stagesWithDone := make([]StageWithDone, 0, len(stages))
-
 	for _, stage := range stages {
-		stagesWithDone = append(stagesWithDone, wrapStageWithDone(stage))
-	}
-
-	for _, stage := range stagesWithDone {
-		in = stage(in, done)
+		in = wrapStageWithDone(stage)(in, done)
 	}
 
 	return in
