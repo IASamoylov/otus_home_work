@@ -35,12 +35,17 @@ func wrapStageWithDone(stage Stage) func(in In, done In) Out {
 
 		go func() {
 			defer close(out)
-			for value := range stage(in) {
-				select {
-				case <-done:
-					return
-				default:
-					out <- value
+			select {
+			case <-done:
+				return
+			default:
+				for value := range stage(in) {
+					select {
+					case <-done:
+						return
+					default:
+						out <- value
+					}
 				}
 			}
 		}()

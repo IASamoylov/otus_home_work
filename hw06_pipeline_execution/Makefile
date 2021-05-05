@@ -5,9 +5,13 @@ pre-commit:
 	golangci-lint run .
 	gci -w .
 
+.PHONY: test-race
+test-race:
+	go test -v -race -count=100 .
+
 .PHONY: test
 test:
-	go test -v -race -count=100 .
+	go test .
 
 .PHONY: clean
 clean:

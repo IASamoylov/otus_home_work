@@ -98,3 +98,95 @@ func TestPipeline(t *testing.T) {
 		require.Nil(t, ExecutePipeline(nil, nil))
 	})
 }
+
+func TestPipelineByAlekseyBakin(t *testing.T) {
+
+	t.Run("concurrency", func(t *testing.T) {
+		waitCh := make(chan struct{})
+		defer close(waitCh)
+
+		stageFn := func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for v := range in {
+					out <- v
+					<-waitCh
+				}
+			}()
+			return out
+		}
+
+		lastStageFn := func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for v := range in {
+					out <- v
+					<-waitCh
+				}
+			}()
+			return out
+		}
+
+		in := make(Bi)
+		const testValue = "test"
+		go func() {
+			in <- testValue
+			close(in)
+		}()
+
+		var resValue interface{}
+		out := ExecutePipeline(in, nil, stageFn, stageFn, lastStageFn)
+		require.Eventually(t, func() bool {
+			select {
+			case resValue = <-out:
+				return true
+			default:
+				return false
+			}
+		}, time.Second, time.Millisecond)
+
+		require.EqualValues(t, testValue, resValue)
+	})
+
+	t.Run("done", func(t *testing.T) {
+		waitCh := make(chan struct{})
+		defer close(waitCh)
+
+		stageFn := func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for v := range in {
+					<-waitCh
+					out <- v
+				}
+			}()
+			return out
+		}
+
+		in := make(Bi)
+		const testValue = "test"
+		go func() {
+			in <- testValue
+			close(in)
+		}()
+
+		doneCh := make(Bi)
+		var resValue interface{}
+		out := ExecutePipeline(in, doneCh, stageFn, stageFn, stageFn)
+		close(doneCh)
+
+		require.Eventually(t, func() bool {
+			select {
+			case resValue = <-out:
+				return true
+			default:
+				return false
+			}
+		}, time.Second, time.Millisecond)
+
+		require.Nil(t, resValue)
+	})
+}
