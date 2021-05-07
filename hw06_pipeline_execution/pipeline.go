@@ -13,7 +13,7 @@ type (
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	if stages == nil {
-		return nil
+		return in
 	}
 
 	for _, stage := range stages {

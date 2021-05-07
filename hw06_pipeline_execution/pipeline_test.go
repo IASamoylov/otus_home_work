@@ -95,8 +95,32 @@ func TestPipeline(t *testing.T) {
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
 
-	t.Run("nil when stages are empty", func(t *testing.T) {
-		require.Nil(t, ExecutePipeline(nil, nil))
+	t.Run("returns in chan when stages are empty", func(t *testing.T) {
+		t.Run("in is nil", func(t *testing.T) {
+			require.Nil(t, ExecutePipeline(nil, nil))
+		})
+
+		t.Run("in is data", func(t *testing.T) {
+			in := make(Bi)
+			data := []int{1, 2, 3, 4, 5}
+
+			go func() {
+				for _, v := range data {
+					in <- v
+				}
+				close(in)
+			}()
+
+			result := make([]int, 0, 5)
+			out := ExecutePipeline(in, nil)
+
+			for v := range out {
+				result = append(result, v.(int))
+			}
+
+			require.Equal(t, data, result)
+		})
+
 	})
 
 	t.Run("solution not throw runtime error out of memory", func(t *testing.T) {
