@@ -120,7 +120,6 @@ func TestPipeline(t *testing.T) {
 
 			require.Equal(t, data, result)
 		})
-
 	})
 
 	t.Run("solution not throw runtime error out of memory", func(t *testing.T) {
