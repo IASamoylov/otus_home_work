@@ -3,10 +3,12 @@ package hw06pipelineexecution
 import (
 	"runtime/debug"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/goleak"
 )
 
 const (
@@ -94,6 +96,24 @@ func TestPipeline(t *testing.T) {
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
+}
+
+func TestByMe(t *testing.T) {
+	// Stage generator
+	g := func(_ string, f func(v interface{}) interface{}) Stage {
+		return func(in In) Out {
+			out := make(Bi)
+			go func() {
+				defer close(out)
+				for v := range in {
+					time.Sleep(sleepPerStage)
+					newVal := f(v)
+					out <- newVal
+				}
+			}()
+			return out
+		}
+	}
 
 	t.Run("returns in chan when stages are empty", func(t *testing.T) {
 		t.Run("in is nil", func(t *testing.T) {
@@ -154,6 +174,62 @@ func TestPipeline(t *testing.T) {
 		}
 
 		require.Equal(t, []string{"5001", "5002", "5003", "5004", "5005"}, result)
+	})
+
+	t.Run("the pipeline does not block when no one is reading from the buffered output channel", func(t *testing.T) {
+		in := make(Bi, 5)
+		data := []int{1, 2, 3, 4, 5}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+		result := make([]int, 0, 5)
+		var wg sync.WaitGroup
+		wg.Add(5)
+
+		stages := []Stage{
+			g("N * N", func(v interface{}) interface{} { return v.(int) * v.(int) }),
+			g("N * N", func(v interface{}) interface{} { return v.(int) * v.(int) }),
+			g("Result", func(v interface{}) interface{} {
+				result = append(result, v.(int))
+				wg.Done()
+				return v.(int)
+			}),
+		}
+
+		ExecutePipeline(in, nil, stages...)
+
+		wg.Wait()
+
+		require.Equal(t, []int{1, 16, 81, 256, 625}, result)
+	})
+
+	t.Run("can interrupt pipeline when no one read from out channel", func(t *testing.T) {
+		defer goleak.VerifyNone(t)
+		in := make(Bi)
+		data := []int{1, 2, 3, 4, 5}
+
+		go func() {
+			for _, v := range data {
+				in <- v
+			}
+			close(in)
+		}()
+
+		done := make(Bi)
+		ExecutePipeline(in, done, func(in In) Out {
+			return in
+		})
+
+		go func() {
+			time.Sleep(time.Millisecond * 200)
+			close(done)
+		}()
+
+		time.Sleep(time.Millisecond * 400)
 	})
 }
 
