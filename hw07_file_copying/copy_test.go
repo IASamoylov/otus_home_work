@@ -37,4 +37,9 @@ func TestCopy(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("", func(t *testing.T) {
+		err := Copy("./dirToFile", "./dirToFile/out.txt", 0, 0)
+		require.Nil(t, err)
+	})
 }

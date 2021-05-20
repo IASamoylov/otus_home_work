@@ -33,7 +33,7 @@ type OnlyWriter struct {
 
 // CopyProgressBar - preset without speed and any timers. Only counters, bar and percents.
 // Example: 'Prefix 20/100 [-->______] 20% Suffix'.
-var CopyProgressBar pb.ProgressBarTemplate = `Copies {{string . "fileName" | green}} with offset {{string . "offset" | blue}} {{counters . }} {{bar . }} {{percent . }}`
+var CopyProgressBar pb.ProgressBarTemplate = `Copies {{string . "fromFileName" | green}} to {{string . "toFileName" | green}}  with offset {{string . "offset" | blue}} {{counters . }} {{bar . }} {{percent . }}`
 
 // Copy copies the file / files to the specified directory or specified file
 // can copy from any position in the file with read-limited bytes.
@@ -95,7 +95,7 @@ func copyDirToFile(fromDirStat Stat, toPath string, offset, limit int64) error {
 			return err
 		}
 
-		context, err := prepareContext(File{stat: stat, file: source}, File{file: destination}, offset, limit)
+		context, err := prepareContext(File{stat: stat, file: source}, File{file: destination, stat: Stat{name: toPath}}, offset, limit)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,9 @@ func copyDirToFile(fromDirStat Stat, toPath string, offset, limit int64) error {
 
 		_, err = io.Copy(context.destination, context.source)
 
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -126,7 +128,7 @@ func copyFileToFile(stat Stat, toPath string, offset, limit int64) error {
 		return err
 	}
 
-	context, err := prepareContext(File{stat: stat, file: source}, File{file: destination}, offset, limit)
+	context, err := prepareContext(File{stat: stat, file: source}, File{file: destination, stat: Stat{name: toPath}}, offset, limit)
 	if err != nil {
 		return err
 	}
@@ -160,7 +162,8 @@ func prepareContext(source, destination File, offset, limit int64) (*Context, er
 	}
 
 	bar := CopyProgressBar.Start64(limit)
-	bar.Set("fileName", source.stat.name)
+	bar.Set("fromFileName", source.stat.name)
+	bar.Set("toFileName", destination.stat.name)
 	bar.Set("offset", bar.Format(offset))
 
 	reader := io.LimitReader(source.file, limit)
