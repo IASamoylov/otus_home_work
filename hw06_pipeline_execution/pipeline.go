@@ -26,7 +26,6 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 func wrapStageWithDone(stage Stage) StageWithDone {
 	return func(in In, done In) Out {
 		out := make(Bi, cap(in))
-		tempBuffer := make([]interface{}, 0)
 
 		go func() {
 			defer close(out)
@@ -34,8 +33,6 @@ func wrapStageWithDone(stage Stage) StageWithDone {
 			stageOut := stage(in)
 
 			for {
-				tempBuffer = tryToWriteBufferToOut(tempBuffer, out, done)
-
 				select {
 				case <-done:
 					return
@@ -45,9 +42,9 @@ func wrapStageWithDone(stage Stage) StageWithDone {
 						case <-done:
 							return
 						default:
-							tempBuffer = writeTo(value, tempBuffer, out)
+							out <- value
 						}
-					} else if len(tempBuffer) == 0 {
+					} else {
 						return
 					}
 				}
@@ -56,40 +53,4 @@ func wrapStageWithDone(stage Stage) StageWithDone {
 
 		return out
 	}
-}
-
-func tryToWriteBufferToOut(tempBuffer []interface{}, out Bi, done In) []interface{} {
-	if len(tempBuffer) == 0 {
-		return tempBuffer
-	}
-
-	for {
-		value := tempBuffer[0]
-		select {
-		case <-done:
-			return tempBuffer
-		case out <- value:
-			tempBuffer = tempBuffer[1:]
-
-			if len(tempBuffer) == 0 {
-				return tempBuffer
-			}
-		default:
-			return tempBuffer
-		}
-	}
-}
-
-func writeTo(value interface{}, tempBuffer []interface{}, out Bi) []interface{} {
-	if len(tempBuffer) != 0 {
-		tempBuffer = append(tempBuffer, value)
-	} else {
-		select {
-		case out <- value: // Put 2 in the channel unless it is full
-		default:
-			tempBuffer = append(tempBuffer, value)
-		}
-	}
-
-	return tempBuffer
 }

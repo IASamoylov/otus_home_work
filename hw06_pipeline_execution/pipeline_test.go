@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"go.uber.org/goleak"
 )
 
 const (
@@ -205,31 +204,6 @@ func TestByMe(t *testing.T) {
 		wg.Wait()
 
 		require.Equal(t, []int{1, 16, 81, 256, 625}, result)
-	})
-
-	t.Run("can interrupt pipeline when no one read from out channel", func(t *testing.T) {
-		defer goleak.VerifyNone(t)
-		in := make(Bi)
-		data := []int{1, 2, 3, 4, 5}
-
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
-
-		done := make(Bi)
-		ExecutePipeline(in, done, func(in In) Out {
-			return in
-		})
-
-		go func() {
-			time.Sleep(time.Millisecond * 200)
-			close(done)
-		}()
-
-		time.Sleep(time.Millisecond * 400)
 	})
 }
 
