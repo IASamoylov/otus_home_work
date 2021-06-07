@@ -1,0 +1,9 @@
+package main
+
+import "github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader"
+
+// RunCmd runs a command + arguments (cmd) with environment variables from env.
+func RunCmd(cmd []string, env env_reader.Environment) (returnCode int) {
+	// Place your code here.
+	return
+}
