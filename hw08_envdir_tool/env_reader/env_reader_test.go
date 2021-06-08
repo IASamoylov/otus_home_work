@@ -57,25 +57,37 @@ func TestReadDir(t *testing.T) {
 		ctx := NewContext(mockOS)
 
 		t.Run("read only first line", func(t *testing.T) {
-			afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", []byte("CONTAINER\n\rnew_line"), 0644)
-			env, err := ctx.ReadDir("test")
+			tests := []struct {
+				name string
+				data string
+			}{
+				{"0x00", "CONTAINER\u0000with new line"},
+				{"default line separator", "CONTAINER\n\rnew_line"},
+			}
 
-			require.NoError(t, err)
-			require.Contains(t, env, "RUNTIME_ENVIRONMENT")
-			require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
-				"RUNTIME_ENVIRONMENT",
-				"CONTAINER",
-				false,
-			})
+			for _, tc := range tests {
+				t.Run(tc.name, func(t *testing.T) {
+					afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", []byte(tc.data), 0644)
+					env, err := ctx.ReadDir("test")
+
+					require.NoError(t, err)
+					require.Contains(t, env, "RUNTIME_ENVIRONMENT")
+					require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
+						"RUNTIME_ENVIRONMENT",
+						"CONTAINER",
+						false,
+					})
+				})
+			}
 		})
 
-		t.Run("trim ", func(t *testing.T) {
+		t.Run("trim invalid symbols", func(t *testing.T) {
 			runes := []struct {
 				b []byte
 			}{
-				{[]byte("\x00")}, {[]byte("\r")}, {[]byte("\n")},
+				{[]byte("\r")}, {[]byte("\n")}, {[]byte(" ")},
 				{[]byte("\t")}, {[]byte("\v")}, {[]byte("\f")},
-				{[]byte(" ")}, {[]byte(string(rune(0x85)))}, {[]byte(string(rune(0x85)))},
+				{[]byte(string(rune(0x85)))}, {[]byte(string(rune(0x85)))},
 			}
 
 			for _, tc := range runes {
@@ -100,15 +112,26 @@ func TestReadDir(t *testing.T) {
 		})
 
 		t.Run("remove env when file is empty", func(t *testing.T) {
-			afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", []byte{}, 0644)
-			env, err := ctx.ReadDir("test")
+			tests := []struct {
+				name string
+				data []byte
+			}{
+				{"empty file", []byte{}},
+				{"only new line symbols", []byte("\u0000\n\r")},
+			}
+			for _, tc := range tests {
+				t.Run(tc.name, func(t *testing.T) {
+					afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", tc.data, 0644)
+					env, err := ctx.ReadDir("test")
 
-			require.NoError(t, err)
-			require.Contains(t, env, "RUNTIME_ENVIRONMENT")
-			require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
-				Name:       "RUNTIME_ENVIRONMENT",
-				NeedRemove: true,
-			})
+					require.NoError(t, err)
+					require.Contains(t, env, "RUNTIME_ENVIRONMENT")
+					require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
+						Name:       "RUNTIME_ENVIRONMENT",
+						NeedRemove: true,
+					})
+				})
+			}
 		})
 	})
 }

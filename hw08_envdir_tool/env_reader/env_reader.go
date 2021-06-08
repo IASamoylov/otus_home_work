@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"unicode"
 )
 
 type Environment map[string]EnvValue
@@ -70,12 +69,12 @@ func (ctx *EnvReaderCtx) parseEntry(dir string, entry os.DirEntry) (env EnvValue
 	if err != nil {
 		return EnvValue{}, NewEnvReaderErrF("Error processing file %v", err, entry.Name())
 	}
-
-	data = bytes.TrimFunc(data, func(r rune) bool {
-		return unicode.IsSpace(r) || rune("\x00"[0]) == r
-	})
+	data = bytes.ReplaceAll(data, []byte("\u0000"), []byte("\n"))
+	data = bytes.TrimSpace(data)
+	data = bytes.Split(data, []byte("\n"))[0]
 	return EnvValue{
-		Name:  entry.Name(),
-		Value: string(data),
+		Name:       entry.Name(),
+		Value:      string(data),
+		NeedRemove: len(data) == 0,
 	}, nil
 }
