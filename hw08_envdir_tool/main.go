@@ -10,9 +10,11 @@ func main() {
 	// Place your code here.
 
 	ctx := env_reader.NewOSContext()
-	_, err := ctx.ReadDir("testdata/env")
+	env, err := ctx.ReadDir("testdata/env")
 
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println(env)
 }
