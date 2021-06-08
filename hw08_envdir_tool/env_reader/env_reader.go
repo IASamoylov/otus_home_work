@@ -49,6 +49,8 @@ func validateEntry(entry os.DirEntry) bool {
 	return false
 }
 
+// parseEntry reads the first line via bufio package and returns env from a file,
+// bufio used because the file can be a big
 func (ctx *EnvReaderCtx) parseEntry(dir string, entry os.DirEntry) (env EnvValue, err error) {
 	info, err := entry.Info()
 	if err != nil {
