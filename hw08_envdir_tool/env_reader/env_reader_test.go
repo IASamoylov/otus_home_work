@@ -1,7 +1,9 @@
 package env_reader
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -45,6 +47,68 @@ func TestReadDir(t *testing.T) {
 			env, err := ctx.ReadDir("test")
 			require.NoError(t, err)
 			require.Empty(t, env)
+		})
+	})
+
+	t.Run("parse environment", func(t *testing.T) {
+		memFS := afero.NewMemMapFs()
+		memFS.Mkdir("test", 0777)
+		mockOS := mocks.NewMockFS(memFS)
+		ctx := NewContext(mockOS)
+
+		t.Run("read only first line", func(t *testing.T) {
+			afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", []byte("CONTAINER\n\rnew_line"), 0644)
+			env, err := ctx.ReadDir("test")
+
+			require.NoError(t, err)
+			require.Contains(t, env, "RUNTIME_ENVIRONMENT")
+			require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
+				"RUNTIME_ENVIRONMENT",
+				"CONTAINER",
+				false,
+			})
+		})
+
+		t.Run("trim ", func(t *testing.T) {
+			runes := []struct {
+				b []byte
+			}{
+				{[]byte("\x00")}, {[]byte("\r")}, {[]byte("\n")},
+				{[]byte("\t")}, {[]byte("\v")}, {[]byte("\f")},
+				{[]byte(" ")}, {[]byte(string(rune(0x85)))}, {[]byte(string(rune(0x85)))},
+			}
+
+			for _, tc := range runes {
+				tc := tc
+				t.Run(fmt.Sprintf("%X", tc.b), func(t *testing.T) {
+					data := [][]byte{
+						[]byte("CONTAINER"),
+						tc.b,
+					}
+					afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", bytes.Join(data, []byte("")), 0644)
+					env, err := ctx.ReadDir("test")
+
+					require.NoError(t, err)
+					require.Contains(t, env, "RUNTIME_ENVIRONMENT")
+					require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
+						"RUNTIME_ENVIRONMENT",
+						"CONTAINER",
+						false,
+					})
+				})
+			}
+		})
+
+		t.Run("remove env when file is empty", func(t *testing.T) {
+			afero.WriteFile(memFS, "test/RUNTIME_ENVIRONMENT", []byte{}, 0644)
+			env, err := ctx.ReadDir("test")
+
+			require.NoError(t, err)
+			require.Contains(t, env, "RUNTIME_ENVIRONMENT")
+			require.Equal(t, env["RUNTIME_ENVIRONMENT"], EnvValue{
+				Name:       "RUNTIME_ENVIRONMENT",
+				NeedRemove: true,
+			})
 		})
 	})
 }

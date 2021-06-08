@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"io"
 	"os"
 
 	"github.com/spf13/afero"
@@ -25,6 +26,10 @@ func (mockFs *mockFs) ReadDir(name string) ([]os.DirEntry, error) {
 		entries = append(entries, &dirEntry{fileInfo: file})
 	}
 	return entries, err
+}
+
+func (mockFs *mockFs) Open(path string) (io.Reader, error) {
+	return mockFs.fs.Open(path)
 }
 
 func (e *dirEntry) Name() string {

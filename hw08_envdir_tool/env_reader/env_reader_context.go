@@ -5,19 +5,15 @@ import (
 	"os"
 )
 
-//go:generate mockgen -destination=mocks/mock_os_wrapper.go -package=mocks . FS
+//go:generate mockgen -destination=mocks/mock_os_wrapper.go -package=mocks . OS
 
 type EnvReaderCtx struct {
 	os OS
 }
 
-type OSWrap struct {
-}
-
 type OS interface {
 	ReadDir(name string) ([]os.DirEntry, error)
-	//ReadFile(name string) ([]byte, error)
-	GetReader(path string) (io.Reader, error)
+	Open(path string) (io.Reader, error)
 }
 
 func NewContext(os OS) *EnvReaderCtx {
@@ -25,13 +21,16 @@ func NewContext(os OS) *EnvReaderCtx {
 }
 
 func NewOSContext() *EnvReaderCtx {
-	return &EnvReaderCtx{OSWrap{}}
+	return &EnvReaderCtx{osWrap{}}
 }
 
-func (osw OSWrap) ReadDir(name string) ([]os.DirEntry, error) {
+type osWrap struct {
+}
+
+func (osWrap) ReadDir(name string) ([]os.DirEntry, error) {
 	return os.ReadDir(name)
 }
 
-func (osw OSWrap) GetReader(name string) ([]byte, error) {
+func (osWrap) Open(name string) (io.Reader, error) {
 	return os.Open(name)
 }

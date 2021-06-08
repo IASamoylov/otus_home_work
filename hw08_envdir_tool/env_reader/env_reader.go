@@ -1,11 +1,12 @@
 package env_reader
 
 import (
+	"bufio"
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+	"unicode"
 )
 
 type Environment map[string]EnvValue
@@ -30,12 +31,10 @@ func (ctx *EnvReaderCtx) ReadDir(dir string) (Environment, error) {
 		if validateEntry(entry) {
 			continue
 		}
-
 		var env EnvValue
 		if env, err = ctx.parseEntry(dir, entry); err != nil {
 			return nil, err
 		}
-
 		environment[env.Name] = env
 	}
 
@@ -61,19 +60,20 @@ func (ctx *EnvReaderCtx) parseEntry(dir string, entry os.DirEntry) (env EnvValue
 		return EnvValue{Name: entry.Name(), NeedRemove: true}, nil
 	}
 
-	data, err := ctx.os.ReadFile(path.Join(dir, info.Name()))
+	file, err := ctx.os.Open(path.Join(dir, info.Name()))
 	if err != nil {
 		return EnvValue{}, NewEnvReaderErrF("Error processing file %v", err, entry.Name())
 	}
-	f, err := os.Open("")
 
-	ioutil.ReadAll(f)
+	reader := bufio.NewReader(file)
+	data, _, err := reader.ReadLine()
+	if err != nil {
+		return EnvValue{}, NewEnvReaderErrF("Error processing file %v", err, entry.Name())
+	}
 
-	data = bytes.ReplaceAll(data, []byte("\x00"), []byte("\n"))
-	data = bytes.ReplaceAll(data, []byte("\t"), []byte("\n"))
-	data = bytes.Split(data, []byte("\n"))[0] // take first line
-	data = bytes.TrimSpace(data)
-
+	data = bytes.TrimFunc(data, func(r rune) bool {
+		return unicode.IsSpace(r) || rune("\x00"[0]) == r
+	})
 	return EnvValue{
 		Name:  entry.Name(),
 		Value: string(data),

@@ -5,6 +5,7 @@
 package mocks
 
 import (
+	io "io"
 	fs "io/fs"
 	reflect "reflect"
 
@@ -32,6 +33,21 @@ func NewMockOS(ctrl *gomock.Controller) *MockOS {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOS) EXPECT() *MockOSMockRecorder {
 	return m.recorder
+}
+
+// Open mocks base method.
+func (m *MockOS) Open(arg0 string) (io.Reader, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Open", arg0)
+	ret0, _ := ret[0].(io.Reader)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Open indicates an expected call of Open.
+func (mr *MockOSMockRecorder) Open(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Open", reflect.TypeOf((*MockOS)(nil).Open), arg0)
 }
 
 // ReadDir mocks base method.
