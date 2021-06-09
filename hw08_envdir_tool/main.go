@@ -11,7 +11,6 @@ func main() {
 
 	ctx := env_reader.NewOSContext()
 	env, err := ctx.ReadDir("testdata/env")
-
 	if err != nil {
 		fmt.Println(err)
 	}

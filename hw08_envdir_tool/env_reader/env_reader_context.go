@@ -5,8 +5,9 @@ import (
 	"os"
 )
 
-//go:generate mockgen -destination=mocks/mock_os_wrapper.go -package=mocks . OS
-
+// go:generate mockgen -destination=mocks/mock_os_wrapper.go -package=mocks . OS
+//go:generate mockgen -destination=mocks/mock_os.go -package=mocks . OS
+//go:generate mockgen -destination mocks/mock_fs.go -package=mocks --build_flags=--mod=mod os DirEntry,FileInfo
 type EnvReaderCtx struct {
 	os OS
 }
@@ -24,8 +25,7 @@ func NewOSContext() *EnvReaderCtx {
 	return &EnvReaderCtx{osWrap{}}
 }
 
-type osWrap struct {
-}
+type osWrap struct{}
 
 func (osWrap) ReadDir(name string) ([]os.DirEntry, error) {
 	return os.ReadDir(name)

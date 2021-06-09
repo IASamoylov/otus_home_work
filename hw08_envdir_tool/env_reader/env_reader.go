@@ -61,7 +61,7 @@ func (ctx *EnvReaderCtx) parseEntry(dir string, entry os.DirEntry) (env EnvValue
 		return EnvValue{Name: entry.Name(), NeedRemove: true}, nil
 	}
 
-	file, err := ctx.os.Open(path.Join(dir, info.Name()))
+	file, err := ctx.os.Open(path.Join(dir, entry.Name()))
 	if err != nil {
 		return EnvValue{}, NewEnvReaderErrF("Error processing file %v", err, entry.Name())
 	}
