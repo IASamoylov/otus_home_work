@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-// go:generate mockgen -destination=mocks/mock_os_wrapper.go -package=mocks . OS
 //go:generate mockgen -destination=mocks/mock_os.go -package=mocks . OS
 //go:generate mockgen -destination mocks/mock_fs.go -package=mocks --build_flags=--mod=mod os DirEntry,FileInfo
+
 type EnvReaderCtx struct {
 	os OS
 }
