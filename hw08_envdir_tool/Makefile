@@ -3,7 +3,7 @@ pre-commit:
 	go mod tidy
 	gofumpt -l -w .
 	gci -w .
-	golangci-lint run .
+	golangci-lint run ./...
 
 .PHONY: test-race
 test-race:

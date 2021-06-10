@@ -5,11 +5,11 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader"
+	envreader "github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader"
 )
 
 // RunCmd runs a command + arguments (cmd) with environment variables from env.
-func (ctx *ExecutorCtx) RunCmd(args []string, env env_reader.Environment) (returnCode int) {
+func (ctx *Ctx) RunCmd(args []string, env envreader.Environment) (returnCode int) {
 	if err := setEnvironment(env); err != nil {
 		fmt.Fprintln(ctx.stdErr, err)
 		return 1
@@ -23,10 +23,12 @@ func (ctx *ExecutorCtx) RunCmd(args []string, env env_reader.Environment) (retur
 	return cmd.ProcessState.ExitCode()
 }
 
-// setEnvironment prepares runtime environment
-func setEnvironment(env env_reader.Environment) error {
+// setEnvironment prepares runtime environment.
+func setEnvironment(env envreader.Environment) error {
 	for k, e := range env {
-		os.Unsetenv(k)
+		if err := os.Unsetenv(k); err != nil {
+			return err
+		}
 
 		if !e.NeedRemove {
 			if err := os.Setenv(k, e.Value); err != nil {
@@ -38,8 +40,8 @@ func setEnvironment(env env_reader.Environment) error {
 	return nil
 }
 
-// newCommand creates new command for running
-func (ctx *ExecutorCtx) newCommand(name string, arg ...string) *exec.Cmd {
+// newCommand creates new command for running.
+func (ctx *Ctx) newCommand(name string, arg ...string) *exec.Cmd {
 	cmd := exec.Command(name, arg...)
 
 	cmd.Stdin = ctx.stdIn

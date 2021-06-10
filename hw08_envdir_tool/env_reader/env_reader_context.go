@@ -1,4 +1,4 @@
-package env_reader
+package envreader
 
 import (
 	"io"
@@ -8,7 +8,7 @@ import (
 //go:generate mockgen -destination=mocks/mock_os.go -package=mocks . OS
 //go:generate mockgen -destination mocks/mock_fs.go -package=mocks --build_flags=--mod=mod os DirEntry,FileInfo
 
-type EnvReaderCtx struct {
+type Ctx struct {
 	os OS
 }
 
@@ -17,12 +17,12 @@ type OS interface {
 	Open(path string) (io.Reader, error)
 }
 
-func NewContext(os OS) *EnvReaderCtx {
-	return &EnvReaderCtx{os}
+func NewContext(os OS) *Ctx {
+	return &Ctx{os}
 }
 
-func NewOSContext() *EnvReaderCtx {
-	return &EnvReaderCtx{osWrap{}}
+func NewOSContext() *Ctx {
+	return &Ctx{osWrap{}}
 }
 
 type osWrap struct{}

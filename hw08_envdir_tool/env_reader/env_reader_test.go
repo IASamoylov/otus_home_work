@@ -1,4 +1,4 @@
-package env_reader
+package envreader
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReadDir(t *testing.T) {
+func TestErrorsReadDir(t *testing.T) {
 	t.Run("wrap err when read dir fail", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockOS := mocks.NewMockOS(ctrl)
@@ -69,7 +69,9 @@ func TestReadDir(t *testing.T) {
 		require.EqualError(t, envReaderErr, "Error processing file [RUNTIME_ENVIRONMENT]")
 		require.EqualError(t, envReaderErr.Unwrap(), "fake error")
 	})
+}
 
+func TestReadDir(t *testing.T) {
 	t.Run("ignore invalid files", func(t *testing.T) {
 		memFS := afero.NewMemMapFs()
 		memFS.Mkdir("test", 0o777)

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-type mockFs struct {
+type MockFs struct {
 	fs afero.Fs
 }
 
@@ -15,11 +15,11 @@ type dirEntry struct {
 	fileInfo os.FileInfo
 }
 
-func NewAferoWrapper(fs afero.Fs) *mockFs {
-	return &mockFs{fs}
+func NewAferoWrapper(fs afero.Fs) *MockFs {
+	return &MockFs{fs}
 }
 
-func (mockFs *mockFs) ReadDir(name string) ([]os.DirEntry, error) {
+func (mockFs *MockFs) ReadDir(name string) ([]os.DirEntry, error) {
 	files, err := afero.ReadDir(mockFs.fs, name)
 	entries := make([]os.DirEntry, 0, len(files))
 	for _, file := range files {
@@ -28,7 +28,7 @@ func (mockFs *mockFs) ReadDir(name string) ([]os.DirEntry, error) {
 	return entries, err
 }
 
-func (mockFs *mockFs) Open(path string) (io.Reader, error) {
+func (mockFs *MockFs) Open(path string) (io.Reader, error) {
 	return mockFs.fs.Open(path)
 }
 
