@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/executor"
-
 	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader"
+	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/executor"
 )
 
 func main() {
@@ -17,7 +16,6 @@ func main() {
 
 	readerCtx := env_reader.NewOSContext()
 	env, err := readerCtx.ReadDir(os.Args[1])
-
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
