@@ -7,7 +7,7 @@ pre-commit:
 
 .PHONY: test-race
 test-race:
-	go test -v -race -count=100 .
+	go test -v -race -count=100 ./...
 
 .PHONY: test
 test:

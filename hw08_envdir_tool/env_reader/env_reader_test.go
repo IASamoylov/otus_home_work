@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	common_mocks "github.com/IASamoylov/otus_home_work/hw08_envdir_tool/common/mocks"
 	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/afero"
@@ -16,7 +17,7 @@ import (
 func TestErrorsReadDir(t *testing.T) {
 	t.Run("wrap err when read dir fail", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		mockOS := mocks.NewMockOS(ctrl)
+		mockOS := common_mocks.NewMockOSFunctions(ctrl)
 		mockOS.EXPECT().ReadDir("./path").Return(nil, errors.New("fake error"))
 
 		ctx := NewContext(mockOS)
@@ -32,7 +33,7 @@ func TestErrorsReadDir(t *testing.T) {
 	t.Run("wrap err when info of file fail", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockDirEntry := mocks.NewMockDirEntry(ctrl)
-		mockOS := mocks.NewMockOS(ctrl)
+		mockOS := common_mocks.NewMockOSFunctions(ctrl)
 		mockDirEntry.EXPECT().Info().Return(nil, errors.New("fake error"))
 		mockDirEntry.EXPECT().Name().Return("RUNTIME_ENVIRONMENT").AnyTimes()
 		mockDirEntry.EXPECT().IsDir().Return(false)
@@ -44,7 +45,7 @@ func TestErrorsReadDir(t *testing.T) {
 		var envReaderErr *envReaderErr
 
 		require.ErrorAs(t, err, &envReaderErr)
-		require.EqualError(t, envReaderErr, "Error processing file [RUNTIME_ENVIRONMENT]")
+		require.EqualError(t, envReaderErr, "Error processing file RUNTIME_ENVIRONMENT")
 		require.EqualError(t, envReaderErr.Unwrap(), "fake error")
 	})
 
@@ -56,7 +57,7 @@ func TestErrorsReadDir(t *testing.T) {
 		mockDirEntry.EXPECT().Info().Return(mockFileInfo, nil)
 		mockDirEntry.EXPECT().Name().Return("RUNTIME_ENVIRONMENT").AnyTimes()
 		mockDirEntry.EXPECT().IsDir().Return(false)
-		mockOS := mocks.NewMockOS(ctrl)
+		mockOS := common_mocks.NewMockOSFunctions(ctrl)
 		mockOS.EXPECT().ReadDir("./path").Return([]os.DirEntry{mockDirEntry}, nil)
 		mockOS.EXPECT().Open("path/RUNTIME_ENVIRONMENT").Return(nil, errors.New("fake error"))
 
@@ -66,7 +67,7 @@ func TestErrorsReadDir(t *testing.T) {
 		var envReaderErr *envReaderErr
 
 		require.ErrorAs(t, err, &envReaderErr)
-		require.EqualError(t, envReaderErr, "Error processing file [RUNTIME_ENVIRONMENT]")
+		require.EqualError(t, envReaderErr, "Error processing file RUNTIME_ENVIRONMENT")
 		require.EqualError(t, envReaderErr.Unwrap(), "fake error")
 	})
 }
@@ -190,7 +191,7 @@ func TestReadDir(t *testing.T) {
 			mockDirEntry.EXPECT().Info().Return(mockFileInfo, nil)
 			mockDirEntry.EXPECT().Name().Return("RUNTIME_ENVIRONMENT").AnyTimes()
 			mockDirEntry.EXPECT().IsDir().Return(false)
-			mockOS := mocks.NewMockOS(ctrl)
+			mockOS := common_mocks.NewMockOSFunctions(ctrl)
 			mockOS.EXPECT().ReadDir("./path").Return([]os.DirEntry{mockDirEntry}, nil)
 
 			ctx := NewContext(mockOS)

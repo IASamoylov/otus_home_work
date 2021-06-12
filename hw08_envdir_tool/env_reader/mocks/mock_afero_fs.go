@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"errors"
 	"io"
 	"os"
 
@@ -30,6 +31,18 @@ func (mockFs *MockFs) ReadDir(name string) ([]os.DirEntry, error) {
 
 func (mockFs *MockFs) Open(path string) (io.Reader, error) {
 	return mockFs.fs.Open(path)
+}
+
+func (mockFs *MockFs) Setenv(key, value string) error {
+	return errors.New("not implemented")
+}
+
+func (mockFs *MockFs) Unsetenv(key string) error {
+	return errors.New("not implemented")
+}
+
+func (mockFs *MockFs) Environ() []string {
+	return nil
 }
 
 func (e *dirEntry) Name() string {

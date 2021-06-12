@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/common"
 	envreader "github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader"
 	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/executor"
 )
@@ -13,14 +14,14 @@ func main() {
 		fmt.Print("incorrectly configured script")
 		os.Exit(1)
 	}
-
-	readerCtx := envreader.NewOSContext()
+	osWrapper := common.OSWrapper{}
+	readerCtx := envreader.NewContext(osWrapper)
 	env, err := readerCtx.ReadDir(os.Args[1])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	executorCtx := executor.NewExecutorCtx(os.Stdin, os.Stdout, os.Stderr)
+	executorCtx := executor.NewContext(osWrapper, os.Stdin, os.Stdout, os.Stderr)
 	os.Exit(executorCtx.RunCmd(os.Args[2:], env))
 }

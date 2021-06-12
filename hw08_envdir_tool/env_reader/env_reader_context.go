@@ -1,36 +1,15 @@
 package envreader
 
 import (
-	"io"
-	"os"
+	"github.com/IASamoylov/otus_home_work/hw08_envdir_tool/common"
 )
 
-//go:generate mockgen -destination=mocks/mock_os.go -package=mocks . OS
 //go:generate mockgen -destination mocks/mock_fs.go -package=mocks --build_flags=--mod=mod os DirEntry,FileInfo
 
 type Ctx struct {
-	os OS
+	os common.OSFunctions
 }
 
-type OS interface {
-	ReadDir(name string) ([]os.DirEntry, error)
-	Open(path string) (io.Reader, error)
-}
-
-func NewContext(os OS) *Ctx {
+func NewContext(os common.OSFunctions) *Ctx {
 	return &Ctx{os}
-}
-
-func NewOSContext() *Ctx {
-	return &Ctx{osWrap{}}
-}
-
-type osWrap struct{}
-
-func (osWrap) ReadDir(name string) ([]os.DirEntry, error) {
-	return os.ReadDir(name)
-}
-
-func (osWrap) Open(name string) (io.Reader, error) {
-	return os.Open(name)
 }

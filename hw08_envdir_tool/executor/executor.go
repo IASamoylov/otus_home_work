@@ -2,7 +2,6 @@ package executor
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 
 	envreader "github.com/IASamoylov/otus_home_work/hw08_envdir_tool/env_reader"
@@ -10,7 +9,7 @@ import (
 
 // RunCmd runs a command + arguments (cmd) with environment variables from env.
 func (ctx *Ctx) RunCmd(args []string, env envreader.Environment) (returnCode int) {
-	if err := setEnvironment(env); err != nil {
+	if err := ctx.setEnvironment(env); err != nil {
 		fmt.Fprintln(ctx.stdErr, err)
 		return 1
 	}
@@ -24,15 +23,15 @@ func (ctx *Ctx) RunCmd(args []string, env envreader.Environment) (returnCode int
 }
 
 // setEnvironment prepares runtime environment.
-func setEnvironment(env envreader.Environment) error {
+func (ctx *Ctx) setEnvironment(env envreader.Environment) error {
 	for k, e := range env {
-		if err := os.Unsetenv(k); err != nil {
-			return err
+		if err := ctx.os.Unsetenv(k); err != nil {
+			return NewExecutorErrF("errors when deleting an environment variable %v", err, k)
 		}
 
 		if !e.NeedRemove {
-			if err := os.Setenv(k, e.Value); err != nil {
-				return err
+			if err := ctx.os.Setenv(k, e.Value); err != nil {
+				return NewExecutorErrF("errors when setting an environment variable %v with value %v", err, k, e.Value)
 			}
 		}
 	}
@@ -47,7 +46,7 @@ func (ctx *Ctx) newCommand(name string, arg ...string) *exec.Cmd {
 	cmd.Stdin = ctx.stdIn
 	cmd.Stdout = ctx.stdOut
 	cmd.Stderr = ctx.stdErr
-	cmd.Env = os.Environ()
+	cmd.Env = ctx.os.Environ()
 
 	return cmd
 }

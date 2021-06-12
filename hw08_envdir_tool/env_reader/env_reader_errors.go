@@ -12,7 +12,7 @@ func NewEnvReaderErr(msg string, err error) error {
 }
 
 func NewEnvReaderErrF(msg string, err error, a ...interface{}) error {
-	return &envReaderErr{fmt.Sprintf(msg, a), err}
+	return &envReaderErr{fmt.Sprintf(msg, fmt.Sprintf(msg, a...), err), err}
 }
 
 func (err *envReaderErr) Error() string {
