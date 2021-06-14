@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -188,15 +189,144 @@ func TestValidationFieldTagValidateSuccessful(t *testing.T) {
 
 func TestValidationFieldValidateFail(t *testing.T) {
 	tests := []struct {
-		tag   reflect.StructTag
-		value interface{}
-	}{}
+		tag        reflect.StructTag
+		value      interface{}
+		wrapErrMsg string
+		errMsg     string
+	}{
+		{
+			tag: "string,validate:\"uuid\"",
+			value: struct {
+				ID string `validate:"uuid"`
+			}{},
+			errMsg: "tag `validate:\"uuid\"` configured incorrectly for field ID",
+		},
+		{
+			tag: "string,validate:\"len:\"",
+			value: struct {
+				ID string `validate:"len:"`
+			}{},
+			errMsg: "tag `validate:\"len:\"` configured incorrectly validation rule for field ID",
+		},
+		{
+			tag: "int32,validate:\"in:3,\"",
+			value: struct {
+				Age int32 `validate:"in:3,"`
+			}{},
+			errMsg: "tag `validate:\"in:3,\"` configured incorrectly validation rule for field Age",
+		},
+		{
+			tag: "int32,validate:\"in:3\"",
+			value: struct {
+				Age int32 `validate:"in:3"`
+			}{},
+			errMsg: "tag `validate:\"in:3\"` configured incorrectly validation rule for field Age",
+		},
+		{
+			tag: "int32,validate:\"in:3,7,18\"",
+			value: struct {
+				Age int32 `validate:"in:3,7,18"`
+			}{},
+			errMsg: "tag `validate:\"in:3,7,18\"` configured incorrectly validation rule for field Age",
+		},
+		{
+			tag: "time.Time,validate:\"in:2021.07.25,2021.09.25\"",
+			value: struct {
+				Birthday time.Time `validate:"in:2021.07.25,2021.09.25"`
+			}{},
+			errMsg: "tag `validate:\"in:2021.07.25,2021.09.25\"` not supported for this type time.Time",
+		},
+		{
+			tag: "int32,validate:\"len:36\"",
+			value: struct {
+				ID int32 `validate:"len:36"`
+			}{},
+			errMsg: "tag `validate:\"len:36\"` not supported for this type int32",
+		},
+		{
+			tag: "string,validate:\"min:13\"",
+			value: struct {
+				ID string `validate:"min:13"`
+			}{},
+			errMsg: "tag `validate:\"min:13\"` not supported for this type string",
+		},
+		{
+			tag: "time.Time,validate:\"max:2999.07.25\"",
+			value: struct {
+				Birthday time.Time `validate:"max:2999.07.25"`
+			}{},
+			errMsg: "tag `validate:\"max:2999.07.25\"` not supported for this type time.Time",
+		},
+		{
+			tag: "int32,validate:\"max:Z\"",
+			value: struct {
+				Birthday int32 `validate:"max:Z"`
+			}{},
+			errMsg: "tag `validate:\"max:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "int64,validate:\"max:Z\"",
+			value: struct {
+				Birthday int64 `validate:"max:Z"`
+			}{},
+			errMsg: "tag `validate:\"max:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "int8,validate:\"min:Z\"",
+			value: struct {
+				Birthday int8 `validate:"min:Z"`
+			}{},
+			errMsg: "tag `validate:\"min:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "int16,validate:\"min:Z\"",
+			value: struct {
+				Birthday int16 `validate:"min:Z"`
+			}{},
+			errMsg: "tag `validate:\"min:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "int32,validate:\"min:Z\"",
+			value: struct {
+				Birthday int32 `validate:"min:Z"`
+			}{},
+			errMsg: "tag `validate:\"min:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "uint8,validate:\"max:Z\"",
+			value: struct {
+				Birthday uint8 `validate:"max:Z"`
+			}{},
+			errMsg: "tag `validate:\"max:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "uint16,validate:\"max:Z\"",
+			value: struct {
+				Birthday uint16 `validate:"max:Z"`
+			}{},
+			errMsg: "tag `validate:\"max:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "uint16,validate:\"min:Z\"",
+			value: struct {
+				Birthday uint16 `validate:"min:Z"`
+			}{},
+			errMsg: "tag `validate:\"min:Z\"` contains an invalid rule value Z",
+		},
+		{
+			tag: "int,validate:\"regexp:\\d+\"",
+			value: struct {
+				ID int `validate:"regexp:\\d+"`
+			}{},
+			errMsg: "tag `validate:\"regexp:\\\\d+\"` not supported for this type int",
+		},
+	}
 
 	for _, tc := range tests {
 		t.Run(string(tc.tag), func(t *testing.T) {
 			ok, err := newValidationField(reflect.ValueOf(tc.value), 0).validateTags()
-			require.True(t, ok)
-			require.NoError(t, err)
+			require.False(t, ok)
+			require.EqualError(t, err, tc.errMsg)
 		})
 	}
 }

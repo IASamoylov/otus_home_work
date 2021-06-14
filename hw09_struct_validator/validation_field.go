@@ -47,11 +47,11 @@ func (v *validationField) validateTags() (_ bool, err error) {
 
 	for _, tag := range v.tags {
 		if _, ok := validTags[tag.name]; !ok {
-			return false, NewValidatorErrorF("tag %v configured incorrectly for field %v", tag.tag, v.fieldType.Name)
+			return false, NewValidatorErrorF("tag `%v` configured incorrectly for field %v", tag.tag, v.fieldType.Name)
 		}
 
 		if tag.valueIsUndefined {
-			return false, NewValidatorErrorF("tag %v configured incorrectly validation rule for field %v", tag.tag, v.fieldType.Name)
+			return false, NewValidatorErrorF("tag `%v` configured incorrectly validation rule for field %v", tag.tag, v.fieldType.Name)
 		}
 
 		switch tag.name {
@@ -68,25 +68,36 @@ func (v *validationField) validateTags() (_ bool, err error) {
 		}
 	}
 
-	return true, err
+	return err == nil, err
 }
 
 // validateIn validates that tag configured for correct type.
 func validateIn(v *validationField, tag validationFieldTag) error {
 	valuesRange := strings.Split(tag.value, ",")
+	kind := v.field.Kind()
 
-	if len(valuesRange) != 2 {
-		ruleErr := errors.New("rule must be configured as range in:min,max")
-		return NewValidatorErrorWF("tag %v configured incorrectly validation rule for field %v", ruleErr, tag.tag, v.fieldType.Name)
+	if kind == reflect.String {
+		if len(valuesRange) == 0 {
+			ruleErr := errors.New("rule must be configured as range in:value1,value2,value3")
+			return NewValidatorErrorWF("tag `%v` configured incorrectly validation rule for field %v", ruleErr, tag.tag, v.fieldType.Name)
+		}
 	}
 
-	return nil
+	if kind == reflect.Int8 || kind == reflect.Int16 || kind == reflect.Int32 || kind == reflect.Int64 ||
+		kind == reflect.Uint8 || kind == reflect.Uint16 || kind == reflect.Uint32 || kind == reflect.Uint64 {
+		if len(valuesRange) != 2 || len(valuesRange[1]) == 0 {
+			ruleErr := errors.New("rule must be configured as range in:min,max")
+			return NewValidatorErrorWF("tag `%v` configured incorrectly validation rule for field %v", ruleErr, tag.tag, v.fieldType.Name)
+		}
+	}
+
+	return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
 }
 
 // validateLen validates that tag configured for correct type.
 func validateLen(v *validationField, tag validationFieldTag) error {
 	if v.field.Kind() != reflect.String {
-		return NewValidatorErrorF("tag %v not supported for this type %T", tag.tag, v.field.Kind())
+		return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
 	}
 	return nil
 }
@@ -94,7 +105,7 @@ func validateLen(v *validationField, tag validationFieldTag) error {
 // validateRegexp validates that tag configured for correct type.
 func validateRegexp(v *validationField, tag validationFieldTag) error {
 	if v.field.Kind() != reflect.String {
-		return NewValidatorErrorF("tag %v not supported for this type %T", tag.tag, v.field.Kind())
+		return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
 	}
 	return nil
 }
@@ -104,7 +115,7 @@ func validateMinmax(v *validationField, tag validationFieldTag) error {
 	kind := v.field.Kind()
 	if kind != reflect.Int8 && kind != reflect.Int16 && kind != reflect.Int32 && kind != reflect.Int64 &&
 		kind != reflect.Uint8 && kind != reflect.Uint16 && kind != reflect.Uint32 && kind != reflect.Uint64 {
-		return NewValidatorErrorF("tag %v not supported for this type %T", tag.tag, v.field.Kind())
+		return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
 	}
 
 	types := map[reflect.Kind]func(s string) (interface{}, error){
@@ -135,7 +146,7 @@ func validateMinmax(v *validationField, tag validationFieldTag) error {
 	}
 	for k, parse := range types {
 		if _, err := parse(tag.value); kind == k && err != nil {
-			return NewValidatorErrorWF("tag %v contains an invalid rule value %v", err, tag.tag, tag.value)
+			return NewValidatorErrorWF("tag `%v` contains an invalid rule value %v", err, tag.tag, tag.value)
 		}
 	}
 
