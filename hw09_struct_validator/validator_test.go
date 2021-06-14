@@ -58,3 +58,21 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+func Test(t *testing.T) {
+	user := User{
+		ID:    "0dc6bb8d-e8e7-4356-a02a-eff220e769f9",
+		Name:  "UserName",
+		Age:   13,
+		Email: "ia.sa@otu.com",
+		Role:  "admin",
+		Phones: []string{
+			"89006731166",
+			"8006731166",
+		},
+	}
+	user1 := &user
+
+	Validate(user)
+	Validate(user1)
+}
