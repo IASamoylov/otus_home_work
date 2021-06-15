@@ -1,16 +1,18 @@
 package hw09structvalidator
 
 import (
+	"errors"
 	"reflect"
 )
 
 const (
-	tagPrefix        string = "validate"
-	inValidation     string = "in"
-	lenValidation    string = "len"
-	minValidation    string = "min"
-	maxValidation    string = "max"
-	regexpValidation string = "regexp"
+	tagPrefix           string = "validate"
+	inTagValidation     string = "in"
+	lenTagValidation    string = "len"
+	minTagValidation    string = "min"
+	maxTagValidation    string = "max"
+	regexpTagValidation string = "regexp"
+	nestedTagValidation string = "nested"
 )
 
 type ValidationMask string
@@ -32,6 +34,17 @@ func Validate(vi interface{}) error {
 
 		if ok, err := field.validateTags(); !ok {
 			return err
+		}
+
+		ok, err := validate(field)
+
+		if !ok {
+			var validatorErr ValidatorError
+			if ok = errors.As(err, &validatorErr); ok {
+				return validatorErr
+			}
+
+			errs = append(errs, err)
 		}
 	}
 
@@ -56,7 +69,7 @@ func extractStructure(vi interface{}) (reflect.Value, error) {
 	return reflect.Value{}, NewValidatorErrorF("the object %T cannot be validated because it is not a structure", vi)
 }
 
-func validate(field reflect.StructField, mask ValidationMask) (bool, *ValidationError) {
+func validate(field *validationField) (bool, *ValidationError) {
 	return false, nil
 }
 

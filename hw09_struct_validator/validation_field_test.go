@@ -40,28 +40,28 @@ func TestValidationField(t *testing.T) {
 				{valueIsUndefined: true},
 			}},
 			{name: "value is undefined when tag configuration with error", tag: "validate:\"len:\"", tags: []validationFieldTag{
-				{name: lenValidation, valueIsUndefined: true},
+				{name: lenTagValidation, valueIsUndefined: true},
 			}},
 			{name: "value is undefined when tag configuration with error", tag: "validate:\"len\"", tags: []validationFieldTag{
-				{name: lenValidation, valueIsUndefined: true},
+				{name: lenTagValidation, valueIsUndefined: true},
 			}},
 			{name: "tag contain one valid rule", tag: "validate:\"len:46\"", tags: []validationFieldTag{
-				{name: lenValidation, value: "46"},
+				{name: lenTagValidation, value: "46"},
 			}},
 			{name: "tag contains more than one rules", tag: "validate:\"min:46|max:132\"", tags: []validationFieldTag{
-				{name: minValidation, value: "46"},
-				{name: maxValidation, value: "132"},
+				{name: minTagValidation, value: "46"},
+				{name: maxTagValidation, value: "132"},
 			}},
 			{name: "value is undefined when tag configuration with error", tag: "validate:\"min:46|max:\"", tags: []validationFieldTag{
-				{name: minValidation, value: "46"},
-				{name: maxValidation, valueIsUndefined: true},
+				{name: minTagValidation, value: "46"},
+				{name: maxTagValidation, valueIsUndefined: true},
 			}},
 			{name: "value is undefined when tag configuration with error", tag: "validate:\"min|max:132\"", tags: []validationFieldTag{
-				{name: minValidation, valueIsUndefined: true},
-				{name: maxValidation, value: "132"},
+				{name: minTagValidation, valueIsUndefined: true},
+				{name: maxTagValidation, value: "132"},
 			}},
 			{name: "configuration error when tag contains more than one rules", tag: "validate:\"min:64|\"", tags: []validationFieldTag{
-				{name: minValidation, value: "64"},
+				{name: minTagValidation, value: "64"},
 				{valueIsUndefined: true},
 			}},
 			{name: "configuration error when tag contains more than one rules", tag: "validate:\"|\"", tags: []validationFieldTag{
@@ -175,6 +175,9 @@ func TestValidationFieldTagValidateSuccessful(t *testing.T) {
 		}{}},
 		{tag: "uint64,validate:\"max:36\"", value: struct {
 			ID uint64 `validate:"max:36"`
+		}{}},
+		{tag: "struct,validate:\"nested\"", value: struct {
+			User struct{ ID int } `validate:"nested"`
 		}{}},
 	}
 

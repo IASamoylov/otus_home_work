@@ -38,11 +38,12 @@ func (v *validationField) hasValidationTags() bool {
 // todo it is best to configure the linter for the current task.
 func (v *validationField) validateTags() (_ bool, err error) {
 	validTags := map[string]string{
-		inValidation:     inValidation,
-		lenValidation:    lenValidation,
-		minValidation:    minValidation,
-		maxValidation:    maxValidation,
-		regexpValidation: regexpValidation,
+		inTagValidation:     inTagValidation,
+		lenTagValidation:    lenTagValidation,
+		minTagValidation:    minTagValidation,
+		maxTagValidation:    maxTagValidation,
+		regexpTagValidation: regexpTagValidation,
+		nestedTagValidation: nestedTagValidation,
 	}
 
 	for _, tag := range v.tags {
@@ -50,21 +51,23 @@ func (v *validationField) validateTags() (_ bool, err error) {
 			return false, NewValidatorErrorF("tag `%v` configured incorrectly for field %v", tag.tag, v.fieldType.Name)
 		}
 
-		if tag.valueIsUndefined {
+		if tag.valueIsUndefined && tag.name != nestedTagValidation {
 			return false, NewValidatorErrorF("tag `%v` configured incorrectly validation rule for field %v", tag.tag, v.fieldType.Name)
 		}
 
 		switch tag.name {
-		case inValidation:
+		case inTagValidation:
 			err = validateIn(v, tag)
-		case lenValidation:
+		case lenTagValidation:
 			err = validateLen(v, tag)
-		case regexpValidation:
+		case regexpTagValidation:
 			err = validateRegexp(v, tag)
-		case minValidation:
+		case minTagValidation:
 			err = validateMinmax(v, tag)
-		case maxValidation:
+		case maxTagValidation:
 			err = validateMinmax(v, tag)
+		case nestedTagValidation:
+			err = validateNested(v, tag)
 		}
 	}
 
@@ -81,6 +84,8 @@ func validateIn(v *validationField, tag validationFieldTag) error {
 			ruleErr := errors.New("rule must be configured as range in:value1,value2,value3")
 			return NewValidatorErrorWF("tag `%v` configured incorrectly validation rule for field %v", ruleErr, tag.tag, v.fieldType.Name)
 		}
+
+		return nil
 	}
 
 	if kind == reflect.Int8 || kind == reflect.Int16 || kind == reflect.Int32 || kind == reflect.Int64 ||
@@ -89,6 +94,8 @@ func validateIn(v *validationField, tag validationFieldTag) error {
 			ruleErr := errors.New("rule must be configured as range in:min,max")
 			return NewValidatorErrorWF("tag `%v` configured incorrectly validation rule for field %v", ruleErr, tag.tag, v.fieldType.Name)
 		}
+
+		return nil
 	}
 
 	return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
@@ -97,6 +104,14 @@ func validateIn(v *validationField, tag validationFieldTag) error {
 // validateLen validates that tag configured for correct type.
 func validateLen(v *validationField, tag validationFieldTag) error {
 	if v.field.Kind() != reflect.String {
+		return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
+	}
+	return nil
+}
+
+// validateNested validates that tag configured for correct type.
+func validateNested(v *validationField, tag validationFieldTag) error {
+	if v.field.Kind() != reflect.Struct && v.field.Kind() != reflect.Ptr {
 		return NewValidatorErrorF("tag `%v` not supported for this type %T", tag.tag, v.field.Interface())
 	}
 	return nil
