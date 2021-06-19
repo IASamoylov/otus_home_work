@@ -1,4 +1,4 @@
-package hw09structvalidator
+package errors
 
 import (
 	"errors"
@@ -38,6 +38,10 @@ func (v ValidatorError) Unwrap() error {
 type ValidationError struct {
 	Field string
 	Err   error
+}
+
+func NewValidationError(field string, err error) *ValidationError {
+	return &ValidationError{field, err}
 }
 
 func (v ValidationError) Error() string {

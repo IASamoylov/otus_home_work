@@ -98,3 +98,12 @@ func (v validator) baseValidate(tag Tag) (ok bool, err error) {
 
 	return true, nil
 }
+
+func (v validator) validateTagValueAsInt(tag Tag) error {
+	if _, err := intConverter[v.field.Value.Kind()](tag.Value); err != nil {
+		return errors.NewValidatorErrorWF(
+			"tag `%v` contains an invalid rule value %v for this type %T", err, tag.Tag, tag.Value, v.field.Value.Interface())
+	}
+
+	return nil
+}
