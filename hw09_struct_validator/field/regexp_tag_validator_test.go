@@ -21,6 +21,13 @@ func TestRegexpTagValidator(t *testing.T) {
 				}{},
 				errMsg: "tag `validate:\"regexp:\\\\d+\"` not supported for this type int",
 			},
+			{
+				tag: "int,validate:\"regexp:...)f9\"",
+				value: struct {
+					ID string `validate:"regexp:...)f9"`
+				}{},
+				errMsg: "tag `validate:\"regexp:...)f9\"` contains an invalid rule value ...)f9 for this type string",
+			},
 		}
 
 		for _, tc := range tests {

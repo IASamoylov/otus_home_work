@@ -12,5 +12,12 @@ func (v validator) validateRegexp(tag Tag) error {
 		return errors2.NewValidatorErrorF(
 			"tag `%v` not supported for this type %T", tag.Tag, v.field.Value.Interface())
 	}
+
+	if tag.Regexp.err != nil {
+		return errors2.NewValidatorErrorWF(
+			"tag `%v` contains an invalid rule value %v for this type %T",
+			tag.Regexp.err, tag.Tag, tag.Value, v.field.Value.Interface())
+	}
+
 	return nil
 }

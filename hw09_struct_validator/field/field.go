@@ -2,6 +2,7 @@ package field
 
 import (
 	"reflect"
+	"regexp"
 )
 
 const (
@@ -20,10 +21,16 @@ type Field struct {
 	Tags      []Tag
 }
 
+type TagRegexp struct {
+	Regexp *regexp.Regexp
+	err    error
+}
+
 type Tag struct {
 	Tag              reflect.StructTag
 	Name             string
 	Value            string
+	Regexp           TagRegexp
 	ValueIsUndefined bool
 }
 

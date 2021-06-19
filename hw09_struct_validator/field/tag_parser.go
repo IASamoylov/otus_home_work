@@ -2,6 +2,7 @@ package field
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -36,10 +37,20 @@ func (p *parser) Parse() []Tag {
 			valueIsUndefined = false
 		}
 
+		tagName := tagStructure[0]
+
+		var tagRegexp TagRegexp
+
+		if tagName == RegexpTagValidation {
+			regexp, err := regexp.Compile(value)
+			tagRegexp = TagRegexp{regexp, err}
+		}
+
 		fieldTags = append(fieldTags, Tag{
 			Tag:              p.tag,
-			Name:             tagStructure[0],
+			Name:             tagName,
 			Value:            value,
+			Regexp:           tagRegexp,
 			ValueIsUndefined: valueIsUndefined,
 		})
 	}
