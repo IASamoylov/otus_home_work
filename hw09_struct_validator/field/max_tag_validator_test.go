@@ -72,7 +72,6 @@ func TestMaxTagValidator(t *testing.T) {
 				v := NewTagValidator(f)
 				err := v.validateMax(f.Tags[0])
 				require.EqualError(t, err, tc.errMsg)
-
 			})
 		}
 	})

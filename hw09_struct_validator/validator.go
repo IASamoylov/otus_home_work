@@ -3,56 +3,61 @@ package hw09structvalidator
 import (
 	"errors"
 	"reflect"
-)
 
-const (
-	tagPrefix           string = "validate"
-	inTagValidation     string = "in"
-	lenTagValidation    string = "len"
-	minTagValidation    string = "min"
-	maxTagValidation    string = "max"
-	regexpTagValidation string = "regexp"
-	nestedTagValidation string = "nested"
+	errors2 "github.com/IASamoylov/otus_home_work/hw09_struct_validator/errors"
+	"github.com/IASamoylov/otus_home_work/hw09_struct_validator/field"
 )
 
 type ValidationMask string
 
 // Validate validates structure by tag validate:.
 func Validate(vi interface{}) error {
-	value, err := extractStructure(vi)
-	if err != nil {
+	if ok, err := validate(vi); !ok {
 		return err
 	}
 
-	errs := make(ValidationErrors, 0, value.NumField())
-	for i := 0; i < value.NumField(); i++ {
-		field := newValidationField(value, i)
+	return nil
+}
 
-		if !field.hasValidationTags() {
+func validate(vi interface{}) (bool, error) {
+	value, err := extractStructure(vi)
+	if err != nil {
+		return false, err
+	}
+
+	errs := make([]*errors2.ValidationError, 0, value.NumField())
+	for i := 0; i < value.NumField(); i++ {
+		field := field.New(value, i)
+
+		if !field.HasValidationTags() {
 			continue
 		}
 
-		if ok, err := field.validateTags(); !ok {
-			return err
+		if ok, err := field.ValidateTags(); !ok {
+			return false, err
 		}
 
-		ok, err := validate(field)
+		ok, err := validateField(field)
 
 		if !ok {
-			var validatorErr ValidatorError
+			var validatorErr *errors2.ValidatorError
 			if ok = errors.As(err, &validatorErr); ok {
-				return validatorErr
+				return false, validatorErr
+			}
+			var validationErr *errors2.ValidationError
+			if ok = errors.As(err, &validationErr); ok {
+				errs = append(errs, validationErr)
 			}
 
-			errs = append(errs, err)
+			return false, &errors2.ValidationErrors{Errors: errs}
 		}
 	}
 
 	if len(errs) != 0 {
-		return errs
+		return false, &errors2.ValidationErrors{Errors: errs}
 	}
 
-	return nil
+	return true, nil
 }
 
 func extractStructure(vi interface{}) (reflect.Value, error) {
@@ -66,45 +71,38 @@ func extractStructure(vi interface{}) (reflect.Value, error) {
 		return v, nil
 	}
 
-	return reflect.Value{}, NewValidatorErrorF("the object %T cannot be validated because it is not a structure", vi)
+	return reflect.Value{}, errors2.NewValidatorErrorF("the object %T cannot be validated because it is not a structure", vi)
 }
 
-func validate(field *validationField) (bool, *ValidationError) {
-	return false, nil
-}
+func validateField(field *field.Field) (bool, error) {
+	switch field.Value.Kind() {
+	case reflect.Struct:
+		return validateStruct(field)
+	case reflect.Ptr:
+		return validateStruct(field)
+	case reflect.String:
+		return validateString(field)
+	case reflect.Int:
+		return validateInt(field)
+	case reflect.Int8:
+		return validateInt(field)
+	case reflect.Int16:
+		return validateInt(field)
+	case reflect.Int32:
+		return validateInt(field)
+	case reflect.Int64:
+		return validateInt(field)
+	case reflect.Uint:
+		return validateUint(field)
+	case reflect.Uint8:
+		return validateUint(field)
+	case reflect.Uint16:
+		return validateUint(field)
+	case reflect.Uint32:
+		return validateUint(field)
+	case reflect.Uint64:
+		return validateUint(field)
+	}
 
-func validateStringLen() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateStringRegex() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateStringIn() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateInt32Min() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateInt32Max() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateInt32In() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateInt64Min() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateInt64Max() (bool, *ValidationError) {
-	return false, nil
-}
-
-func validateInt64In() (bool, *ValidationError) {
 	return false, nil
 }

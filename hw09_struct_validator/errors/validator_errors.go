@@ -1,9 +1,7 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 )
 
 type ValidatorError struct {
@@ -33,39 +31,4 @@ func (v ValidatorError) Error() string {
 
 func (v ValidatorError) Unwrap() error {
 	return v.Err
-}
-
-type ValidationError struct {
-	Field string
-	Err   error
-}
-
-func NewValidationError(field string, err error) *ValidationError {
-	return &ValidationError{field, err}
-}
-
-func (v ValidationError) Error() string {
-	var msgBuilder strings.Builder
-
-	msgBuilder.WriteString(v.Field)
-
-	var err ValidationErrors
-	if errors.As(v.Err, &err) {
-		for _, e := range err {
-			msgBuilder.WriteString(fmt.Sprintf("\n\t%v", e.Error()))
-		}
-	} else {
-		msgBuilder.WriteString(fmt.Sprintf(" %v", err.Error()))
-	}
-	return msgBuilder.String()
-}
-
-type ValidationErrors []*ValidationError
-
-func (v ValidationErrors) Error() string {
-	var msgBuilder strings.Builder
-	for _, e := range v {
-		msgBuilder.WriteString(e.Error())
-	}
-	return msgBuilder.String()
 }

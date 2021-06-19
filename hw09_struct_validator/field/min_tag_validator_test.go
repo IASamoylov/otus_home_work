@@ -72,7 +72,6 @@ func TestMinTagValidator(t *testing.T) {
 				v := NewTagValidator(f)
 				err := v.validateMin(f.Tags[0])
 				require.EqualError(t, err, tc.errMsg)
-
 			})
 		}
 	})

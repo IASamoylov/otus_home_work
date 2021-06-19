@@ -123,7 +123,6 @@ func TestInTagValidator(t *testing.T) {
 				require.EqualError(t, err, tc.errMsg)
 			})
 		}
-
 	})
 
 	t.Run("successful cases", func(t *testing.T) {

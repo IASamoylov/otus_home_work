@@ -43,7 +43,6 @@ func TestLenTagValidator(t *testing.T) {
 				v := NewTagValidator(f)
 				err := v.validateLen(f.Tags[0])
 				require.EqualError(t, err, tc.errMsg)
-
 			})
 		}
 	})
