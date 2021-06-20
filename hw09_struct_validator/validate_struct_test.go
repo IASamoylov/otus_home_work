@@ -17,7 +17,7 @@ func TestValidateStruct(t *testing.T) {
 		}{
 			{
 				tag:    "struct,validate:\"nested\"",
-				errMsg: "User.Name: string length must be greater or equal 3",
+				errMsg: "User.Name: string length must be equal 3",
 				value: struct {
 					User struct {
 						Name string `validate:"len:3"`
@@ -32,7 +32,7 @@ func TestValidateStruct(t *testing.T) {
 			},
 			{
 				tag:    "ptr,validate:\"nested,\"",
-				errMsg: "User.Name: string length must be greater or equal 3",
+				errMsg: "User.Name: string length must be equal 3",
 				value: struct {
 					User struct {
 						Name string `validate:"len:3"`

@@ -32,10 +32,10 @@ func validateStringLen(field *field.Field, tag field.Tag) (bool, error) {
 	value := field.Value.String()
 	length, _ := strconv.Atoi(tag.Value)
 
-	if len(value) <= length {
+	if len(value) != length {
 		return false, errors.NewValidationError(
 			field.FieldType.Name,
-			fmt.Errorf("string length must be greater or equal %s", tag.Value))
+			fmt.Errorf("string length must be equal %s", tag.Value))
 	}
 
 	return true, nil

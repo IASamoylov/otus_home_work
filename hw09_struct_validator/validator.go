@@ -2,6 +2,7 @@ package hw09structvalidator
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	errors2 "github.com/IASamoylov/otus_home_work/hw09_struct_validator/errors"
@@ -25,19 +26,14 @@ func validate(vi interface{}) (bool, error) {
 		return false, err
 	}
 
-	errs := make([]*errors2.ValidationError, 0, value.NumField())
-	for i := 0; i < value.NumField(); i++ {
-		field := field.New(value, i)
+	fields, err := getFields(value)
+	if err != nil {
+		return false, err
+	}
 
-		if !field.HasValidationTags() {
-			continue
-		}
-
-		if ok, err := field.ValidateTags(); !ok {
-			return false, err
-		}
-
-		ok, err := validateField(field)
+	errs := make([]*errors2.ValidationError, 0, len(fields))
+	for _, f := range fields {
+		ok, err := validateField(f)
 
 		if !ok {
 			var validatorErr *errors2.ValidatorError
@@ -48,8 +44,6 @@ func validate(vi interface{}) (bool, error) {
 			if ok = errors.As(err, &validationErr); ok {
 				errs = append(errs, validationErr)
 			}
-
-			return false, &errors2.ValidationErrors{Errors: errs}
 		}
 	}
 
@@ -58,6 +52,42 @@ func validate(vi interface{}) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func getFields(value reflect.Value) ([]*field.Field, error) {
+	fields := make([]*field.Field, 0)
+	for i := 0; i < value.NumField(); i++ {
+		f := field.New(value, i)
+
+		if f.Value.Kind() != reflect.Slice && f.Value.Kind() != reflect.Array {
+			if !f.HasValidationTags() {
+				continue
+			}
+
+			if ok, err := f.ValidateTags(); !ok {
+				return nil, err
+			}
+
+			fields = append(fields, f)
+
+			continue
+		}
+
+		for i := 0; i < f.Value.Len(); i++ {
+			f2 := f.ChangeValueAndName(f.Value.Index(i), fmt.Sprintf("%s[%d]", f.FieldType.Name, i))
+			if !f2.HasValidationTags() {
+				continue
+			}
+
+			if ok, err := f2.ValidateTags(); !ok {
+				return nil, err
+			}
+
+			fields = append(fields, f2)
+		}
+	}
+
+	return fields, nil
 }
 
 func extractStructure(vi interface{}) (reflect.Value, error) {
@@ -76,9 +106,15 @@ func extractStructure(vi interface{}) (reflect.Value, error) {
 
 func validateField(field *field.Field) (bool, error) {
 	switch field.Value.Kind() {
+	case reflect.Array:
+		return validateSlice(field)
+	case reflect.Slice:
+		return validateSlice(field)
 	case reflect.Struct:
 		return validateStruct(field)
 	case reflect.Ptr:
+		return validateStruct(field)
+	case reflect.Interface:
 		return validateStruct(field)
 	case reflect.String:
 		return validateString(field)

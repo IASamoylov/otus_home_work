@@ -44,6 +44,13 @@ func New(value reflect.Value, index int) *Field {
 	}
 }
 
+func (v Field) ChangeValueAndName(value reflect.Value, name string) *Field {
+	v.Value = value
+	v.FieldType.Name = name
+
+	return &v
+}
+
 // HasValidationTags checks that tags was configured for the field.
 func (v *Field) HasValidationTags() bool {
 	return len(v.Tags) != 0

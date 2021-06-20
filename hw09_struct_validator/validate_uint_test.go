@@ -56,7 +56,7 @@ func TestValidateUint(t *testing.T) {
 		for _, tc := range tests {
 			t.Run(string(tc.tag), func(t *testing.T) {
 				f := field.New(reflect.ValueOf(tc.value), 0)
-				ok, err := validateInt(f)
+				ok, err := validateUint(f)
 				require.False(t, ok)
 				require.EqualError(t, err, tc.errMsg)
 			})
@@ -97,7 +97,7 @@ func TestValidateUint(t *testing.T) {
 		for _, tc := range tests {
 			t.Run(string(tc.tag), func(t *testing.T) {
 				f := field.New(reflect.ValueOf(tc.value), 0)
-				ok, err := validateInt(f)
+				ok, err := validateUint(f)
 				require.True(t, ok)
 				require.NoError(t, err)
 			})

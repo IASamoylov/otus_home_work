@@ -40,7 +40,7 @@ func TestValidateString(t *testing.T) {
 				}{
 					Name: "St",
 				},
-				errMsg: "Name: string length must be greater or equal 3",
+				errMsg: "Name: string length must be equal 3",
 			},
 		}
 
@@ -80,7 +80,7 @@ func TestValidateString(t *testing.T) {
 				value: struct {
 					Name string `validate:"len:3"`
 				}{
-					Name: "Ivan",
+					Name: "Iva",
 				},
 			},
 		}
