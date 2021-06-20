@@ -25,12 +25,6 @@ type (
 		Version string `validate:"len:5"`
 	}
 
-	Token struct {
-		Header    []byte
-		Payload   []byte
-		Signature []byte
-	}
-
 	Response struct {
 		Code int    `validate:"in:200,404,500"`
 		Body string `json:"omitempty"`
