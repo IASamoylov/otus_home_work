@@ -52,7 +52,7 @@ func TestTagParser(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(fmt.Sprintf("%v:%v", tc.Name, tc.tag), func(t *testing.T) {
-			result := NewTagParser(tc.tag).Parse()
+			result := newTagParser(tc.tag).Parse()
 
 			require.Len(t, result, len(tc.tags))
 

@@ -28,39 +28,39 @@ func validateInt(f *field.Field) (ok bool, err error) {
 	return true, nil
 }
 
-func validateIntMin(field *field.Field, tag field.Tag) (bool, *errors.ValidationError) {
+func validateIntMin(field *field.Field, tag field.Tag) (bool, error) {
 	rule, _ := strconv.ParseInt(tag.Value, 10, 64)
 	if field.Value.Int() < rule {
-		return false, errors.NewValidationError(
-			field.FieldType.Name,
-			fmt.Errorf("value must be greater or equal %s", tag.Value))
+		return toError("value must be greater or equal %s", field, tag)
 	}
 
 	return true, nil
 }
 
-func validateIntMax(field *field.Field, tag field.Tag) (bool, *errors.ValidationError) {
+func validateIntMax(field *field.Field, tag field.Tag) (bool, error) {
 	rule, _ := strconv.ParseInt(tag.Value, 10, 64)
 	if field.Value.Int() > rule {
-		return false, errors.NewValidationError(
-			field.FieldType.Name,
-			fmt.Errorf("value must be les or equal %s", tag.Value))
+		return toError("value must be les or equal %s", field, tag)
 	}
 
 	return true, nil
 }
 
-func validateIntIn(field *field.Field, tag field.Tag) (bool, *errors.ValidationError) {
+func validateIntIn(field *field.Field, tag field.Tag) (bool, error) {
 	value := field.Value.Int()
 	r := strings.Split(tag.Value, ",")
 	ruleLeft, _ := strconv.ParseInt(r[0], 10, 64)
 	ruleRight, _ := strconv.ParseInt(r[1], 10, 64)
 
 	if value < ruleLeft || value > ruleRight {
-		return false, errors.NewValidationError(
-			field.FieldType.Name,
-			fmt.Errorf("value must be in range [%s]", tag.Value))
+		return toError("value must be in range [%s]", field, tag)
 	}
 
 	return true, nil
+}
+
+func toError(msg string, field *field.Field, tag field.Tag) (bool, error) {
+	return false, errors.NewValidationError(
+		field.FieldType.Name,
+		fmt.Errorf(msg, tag.Value))
 }

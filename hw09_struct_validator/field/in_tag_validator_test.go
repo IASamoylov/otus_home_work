@@ -65,27 +65,6 @@ func TestInTagValidator(t *testing.T) {
 				errMsg: "tag `validate:\"in:-256,78\"` contains an invalid rule value -256,78 for this type int8",
 			},
 			{
-				tag: "int16,validate:\"in:-352,57000\"",
-				value: struct {
-					Age int16 `validate:"in:-352,57000"`
-				}{},
-				errMsg: "tag `validate:\"in:-352,57000\"` contains an invalid rule value -352,57000 for this type int16",
-			},
-			{
-				tag: "int32,validate:\"in:-352,2156483647\"",
-				value: struct {
-					Age int32 `validate:"in:-352,2156483647"`
-				}{},
-				errMsg: "tag `validate:\"in:-352,2156483647\"` contains an invalid rule value -352,2156483647 for this type int32",
-			},
-			{
-				tag: "int32,validate:\"in:-9223372036854775809,2156483647\"",
-				value: struct {
-					Age int64 `validate:"in:-9223372036854775809,2156483647"`
-				}{},
-				errMsg: "tag `validate:\"in:-9223372036854775809,2156483647\"` contains an invalid rule value -9223372036854775809,2156483647 for this type int64",
-			},
-			{
 				tag: "uint8,validate:\"in:-5,78\"",
 				value: struct {
 					Age uint8 `validate:"in:-5,78"`
@@ -118,7 +97,7 @@ func TestInTagValidator(t *testing.T) {
 		for _, tc := range tests {
 			t.Run(string(tc.tag), func(t *testing.T) {
 				f := New(reflect.ValueOf(tc.value), 0)
-				v := NewTagValidator(f)
+				v := newTagValidator(f)
 				err := v.validateIn(f.Tags[0])
 				require.EqualError(t, err, tc.errMsg)
 			})
@@ -174,7 +153,7 @@ func TestInTagValidator(t *testing.T) {
 		for _, tc := range tests {
 			t.Run(string(tc.tag), func(t *testing.T) {
 				f := New(reflect.ValueOf(tc.value), 0)
-				v := NewTagValidator(f)
+				v := newTagValidator(f)
 				err := v.validateIn(f.Tags[0])
 				require.NoError(t, err)
 			})

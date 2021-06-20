@@ -20,8 +20,8 @@ type validator struct {
 	field *Field
 }
 
-// NewTagValidator ...
-func NewTagValidator(f *Field) *validator {
+// newTagValidator ...
+func newTagValidator(f *Field) *validator {
 	return &validator{field: f}
 }
 

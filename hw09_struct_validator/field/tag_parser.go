@@ -10,8 +10,8 @@ type parser struct {
 	tag reflect.StructTag
 }
 
-// NewTagParser ...
-func NewTagParser(tag reflect.StructTag) *parser {
+// newTagParser ...
+func newTagParser(tag reflect.StructTag) *parser {
 	return &parser{tag}
 }
 

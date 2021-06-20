@@ -40,17 +40,17 @@ func New(value reflect.Value, index int) *Field {
 	return &Field{
 		Value:     value.Field(index),
 		FieldType: fieldType,
-		Tags:      NewTagParser(fieldType.Tag).Parse(),
+		Tags:      newTagParser(fieldType.Tag).Parse(),
 	}
 }
 
-// HasValidationTags checks that tags was configured for the field
+// HasValidationTags checks that tags was configured for the field.
 func (v *Field) HasValidationTags() bool {
 	return len(v.Tags) != 0
 }
 
-// ValidateTags validates that validation tags configured correctly
+// ValidateTags validates that validation tags configured correctly.
 // todo it is best to configure the linter for the current task.
 func (v *Field) ValidateTags() (_ bool, err error) {
-	return NewTagValidator(v).Validate()
+	return newTagValidator(v).Validate()
 }

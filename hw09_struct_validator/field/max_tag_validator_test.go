@@ -69,7 +69,7 @@ func TestMaxTagValidator(t *testing.T) {
 		for _, tc := range tests {
 			t.Run(string(tc.tag), func(t *testing.T) {
 				f := New(reflect.ValueOf(tc.value), 0)
-				v := NewTagValidator(f)
+				v := newTagValidator(f)
 				err := v.validateMax(f.Tags[0])
 				require.EqualError(t, err, tc.errMsg)
 			})
@@ -116,7 +116,7 @@ func TestMaxTagValidator(t *testing.T) {
 		for _, tc := range tests {
 			t.Run(string(tc.tag), func(t *testing.T) {
 				f := New(reflect.ValueOf(tc.value), 0)
-				v := NewTagValidator(f)
+				v := newTagValidator(f)
 				err := v.validateMax(f.Tags[0])
 				require.NoError(t, err)
 			})
