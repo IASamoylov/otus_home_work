@@ -25,7 +25,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get users error: %w", err)
 	}
-	return countDomains(u[:len(u)])
+	return countDomains(u, domain)
 }
 
 type users []User
@@ -35,13 +35,11 @@ func getUsers(r io.Reader, domain string) (result users, err error) {
 
 	scanner := bufio.NewScanner(r)
 	var user *User
-	b := []byte("." + domain + "\",\"Phone\"")
 	for scanner.Scan() {
-		if isSubArray(scanner.Bytes(), b, len(scanner.Bytes()), len(b)) {
+		if strings.Contains(scanner.Text(), "."+domain) {
 			if err = json.Unmarshal(scanner.Bytes(), &user); err != nil {
 				return
 			}
-
 			result = append(result, *user)
 		}
 	}
@@ -50,33 +48,14 @@ func getUsers(r io.Reader, domain string) (result users, err error) {
 	return
 }
 
-func countDomains(u []User) (DomainStat, error) {
+func countDomains(u users, domain string) (DomainStat, error) {
 	result := make(DomainStat)
 
 	for _, user := range u {
-		d := strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])
-		result[d]++
-	}
-	return result, nil
-}
-
-func isSubArray(a, b []byte, n, m int) bool {
-	i := 0
-	j := 0
-
-	for i < n && j < m {
-		if a[i] == b[j] {
-			i++
-			j++
-
-			if j == m {
-				return true
-			}
-		} else {
-			i = i - j + 1
-			j = 0
+		if strings.Contains(user.Email, domain) {
+			d := strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])
+			result[d]++
 		}
 	}
-
-	return false
+	return result, nil
 }
