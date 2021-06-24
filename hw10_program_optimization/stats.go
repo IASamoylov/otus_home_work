@@ -41,6 +41,7 @@ func getUsers(r io.Reader, domain string) (result users, err error) {
 				return
 			}
 			result = append(result, *user)
+			*user = User{}
 		}
 	}
 
