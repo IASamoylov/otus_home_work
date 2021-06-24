@@ -36,4 +36,11 @@ func TestGetDomainStat(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, DomainStat{}, result)
 	})
+
+	t.Run("returns urror when json invalid", func(t *testing.T) {
+		json := `Id":1,"Name":"Howard Mendoza","25""Email":"nulla@Linktype.com"}`
+
+		_, err := GetDomainStat(bytes.NewBufferString(json), "com")
+		require.EqualError(t, err, "get users error: invalid character 'I' looking for beginning of value")
+	})
 }
